@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace Skillbox_Lesson_06
@@ -28,10 +29,10 @@ namespace Skillbox_Lesson_06
                     switch (numOperation)
                     {
                         case 1:
-                            ReadData();
+                            ReadData(EmployeesDataPath);
                             return;
                         case 2:
-                            AddEmployee();
+                            AddEmployee(EmployeesDataPath);
                             return;
                     }
 
@@ -43,26 +44,14 @@ namespace Skillbox_Lesson_06
             }
         }
 
-        private static void ReadData()
+        private static void ReadData(string path)
         {
             Console.Clear();
             Console.WriteLine("СПИСОК СОТРУДНИКОВ:\n");
 
-            StringBuilder builder = new StringBuilder();
-            int strCount = 0;
-            if (File.Exists(EmployeesDataPath))
+            string[] employeesData = GetSplittedFile(path);
+            if (employeesData != null)
             {
-                using (StreamReader reader = new StreamReader(EmployeesDataPath))
-                {
-                    while (!reader.EndOfStream)
-                    {
-                        builder.AppendLine(reader.ReadLine());
-                        strCount++;
-                    }
-                }
-
-                string[] employeesData = builder.ToString().Split('\n');
-
                 for (int i = 0; i < employeesData.Length - 1; i++)
                 {
                     string data = employeesData[i].Replace('#', '|');
@@ -73,29 +62,27 @@ namespace Skillbox_Lesson_06
             Console.ReadKey();
         }
 
-        private static void AddEmployee()
+        private static void AddEmployee(string path)
         {
             Console.Clear();
             Console.WriteLine("ДОБАВЛЕНИЕ СОТРУДНИКА:\n");
-            using (StreamWriter writer = new StreamWriter(EmployeesDataPath, true))
+
+            int newId = CheckId(path);
+
+            using (StreamWriter writer = new StreamWriter(path, true))
             {
                 writer.WriteLine();
 
-                Console.Write("Введите ID сотрудника: ");
-                writer.Write(Console.ReadLine() + ".#" + DateTime.Now.ToString() + "#");
-
+                writer.Write(newId + ".#" + DateTime.Now.ToString() + "#");
 
                 Console.Write("Введите ФИО нового сотрудника: ");
                 writer.Write(Console.ReadLine() + "#");
 
-
                 Console.Write("Введите возраст: ");
                 writer.Write(Console.ReadLine() + "#");
 
-
                 Console.Write("Введите рост: ");
                 writer.Write(Console.ReadLine() + "#");
-
 
                 Console.Write("Введите дату рождения: ");
                 writer.Write(Console.ReadLine() + "#");
@@ -103,6 +90,40 @@ namespace Skillbox_Lesson_06
                 Console.Write("Введите город: ");
                 writer.Write("город " + Console.ReadLine());
             }
+        }
+
+        private static int CheckId(string path)
+        {
+            string[] employeesData = GetSplittedFile(path);
+
+            int[] ids = new int[employeesData.Length - 1];
+            for (int i = 0; i < ids.Length; i++)
+            {
+                ids[i] = int.Parse(employeesData[i].Substring(0, employeesData[i].IndexOf('.')));
+            }
+
+            return ids.Max() + 1;
+        }
+
+        private static string[] GetSplittedFile(string path)
+        {
+            StringBuilder builder = new StringBuilder();
+            string[] employeesData = null;
+
+            if (File.Exists(path))
+            {
+                using (StreamReader reader = new StreamReader(path))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        builder.AppendLine(reader.ReadLine());
+                    }
+                }
+
+                employeesData = builder.ToString().Split('\n');
+            }
+
+            return employeesData;
         }
     }
 }
